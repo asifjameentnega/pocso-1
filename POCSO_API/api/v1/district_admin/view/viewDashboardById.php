@@ -22,12 +22,12 @@ try {
     $inputData = json_decode(file_get_contents("php://input"), true);
 
     // Validate input
-    if (!isset($inputData['EMPLOYEE_ID']) || empty($inputData['EMPLOYEE_ID'])) {
-        throw new Exception("Invalid input. 'EMPLOYEE_ID' is required.");
+    if (!isset($inputData['id']) || empty($inputData['id'])) {
+        throw new Exception("Invalid input. 'id' is required.");
     }
 
     // Sanitize input
-    $employee_id = htmlspecialchars(strip_tags($inputData['EMPLOYEE_ID']));
+    $id = htmlspecialchars(strip_tags($inputData['id']));
 
     // Define the full SQL query
     $sql = "
@@ -72,14 +72,14 @@ try {
         ) A
         INNER JOIN SIGNUP_T S ON A.DISTRICT_NAME = S.NAME
         WHERE 
-            S.ID = :EMPLOYEE_ID;
+            S.ID = :id;
     ";
 
     // Prepare the statement
     $stmt = $read_db->prepare($sql);
 
     // Bind parameters
-    $stmt->bindParam(':EMPLOYEE_ID', $employee_id);
+    $stmt->bindParam(':id', $id);
 
     // Execute the query
     $stmt->execute();
@@ -95,7 +95,7 @@ try {
     } else {
         $response = [
             "success" => 0,
-            "message" => "No records found for the provided EMPLOYEE_ID."
+            "message" => "No records found for the provided id."
         ];
     }
 } catch (Exception $e) {

@@ -1,8 +1,8 @@
 <?php
 
 // Load dependencies
-require_once('../../../../helper/header.php');
-require_once('../../../../config/read_database.php'); // Ensure this connects to your database
+require_once('../../../../../helper/header.php');
+require_once('../../../../../config/read_database.php'); // Ensure this connects to your database
 
 // Validate the request method
 if ($_SERVER["REQUEST_METHOD"] !== 'POST') {
@@ -30,7 +30,7 @@ try {
     $id = $inputData['id'];
 
     // Define the SQL query
-    $sql = "select ID,
+    $sql = "SELECT ID,
        STATUS,
        CREATED_BY,
        CREATED_DATE,
@@ -59,7 +59,7 @@ try {
        FINAL_PAYMENT_STATUS,
        INTERIM_PAYMENT_STATUS
   from TNEA_SUPERINTENDENT_T  
-  WHERE ID + :P86_ID;
+  WHERE ID = :P86_ID
     ";
 
     // Prepare the statement

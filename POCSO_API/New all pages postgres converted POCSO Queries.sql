@@ -1,9 +1,9 @@
 -- #*#*#*#*#*#*#**#*#*#*#**#*#*#*#*#*#**#*# POLICE  -- #*#*#*#*#*#*#**#*#*#*#**#*#*#*#*#*#**#*# 
 Pol_Sivag_033
 Sivagangai$123
--- Dashboard
+-- Dashboard  ----------------------------------------------------------------------done-----------------
 
-SELECT 
+SELECT  
     O.ID,
     O.COMPLAINT_NAME,
     O.COMPLAINT_COPY,
@@ -86,7 +86,7 @@ ORDER BY
 
 
 -- When Click on Edit icon, It move to Another Page:
---1. Police Entry Form
+--1. Police Entry Form  ----------------------------------------------------------------------done-----------------
 SELECT 
     ID,
     DISTRICT_NAME,
@@ -410,10 +410,8 @@ SELECT
     O.INTERIM_YES,
     O.FINAL_YES,
     C.ID AS CID,
-    O.DOC_REF,
-    O.DO_REF,
-    C.INTERIM_REF,
-    C.FINAL_REF,
+    C.INTERIM,
+    C.FINAL,
     A.PROCEED_INTERIM AS PROCEED_INTERIM,
     A.PROCEED_FINAL AS PROCEED_FINAL,
     A.INTERIM_PAYMENT_STATUS,
@@ -430,8 +428,8 @@ SELECT
         ELSE 'Pending'
     END AS Condition_Status,
     CASE
-        WHEN C.FINAL_REF IS NOT NULL THEN 'Orders passed'
-        WHEN C.FINAL_REF IS NULL THEN 'Pending Trail'
+        WHEN C.FINAL IS NOT NULL THEN 'Orders passed'
+        WHEN C.FINAL IS NULL THEN 'Pending Trail'
         ELSE 'Pending'
     END AS Condition_Status_1,
     CASE
@@ -452,12 +450,14 @@ FROM
     INNER JOIN TNEA_SUPERINTENDENT_T A ON O.ID = A.COURT_ID
     INNER JOIN SIGNUP_T S ON TRIM(O.DISTRICT_NAME) = TRIM(S.DISTRICT_NAME)
 WHERE  
-    S.ID = :APP_EMPLOYEE_ID 
-    AND TRIM(S.ROLE) IN ('Court') 
+    -- S.ID = :APP_EMPLOYEE_ID 
+   TRIM(S.ROLE) IN ('Court') 
     AND O.REQUEST_STATUS IN ('E', 'S', 'F1', 'C')
 ORDER BY 
     O.UPDATED_DATE DESC;
 
+
+SELECT * FROM public.signup_t;
    
 -- When Click on Edit button it move to concrn Form Page:
 P53_ID			#ID#
@@ -1098,11 +1098,103 @@ FROM (
         O.UPDATED_DATE DESC
 ) A;
 
-
+SELECT 
+    ROW_NUMBER() OVER () AS Sl_No, 
+    A.*
+FROM (
+    SELECT 
+        O.ID,
+        O.DISTRICT_NAME,
+        O.POL_STAT,
+        O.CHILD_GENDER,
+        O.Created_Date,
+        O.COMPLAINT_NAME,
+        O.DATE_OF_FIR,
+        O.FIR_NO,
+		O.COMPLAINT_COPY,
+        O.COMPLAINT_COPY_MIMETYPE,
+        O.COMPLAINT_COPY_FILENAME,
+        O.NAME_PARENT,
+        O.WILLINGNESS_COMPENSATION,
+        COALESCE(O.WHO_NAME, '-') AS WHO_NAME,
+        COALESCE(O.WHO_RELATIONSHIP, '-') AS WHO_RELATIONSHIP,
+        COALESCE(TO_CHAR(O.WHO_DATE, 'DD-Mon-YYYY'), '-') AS WHO_DATE,
+        COALESCE(O.ACCOUNT_NUMBER, '-') AS ACCOUNT_NUMBER,
+        COALESCE(O.BANK_NAME, '-') AS BANK_NAME,
+        COALESCE(O.BRANCH_NAME, '-') AS BRANCH_NAME,
+        COALESCE(O.ACCOUNT_HOLDER_NAME, '-') AS ACCOUNT_HOLDER_NAME,
+        COALESCE(O.IFSC_CODE, '-') AS IFSC_CODE,
+        C.ORDER_NO,
+        O.CHARGE_SHEET_YES_NO,
+        COALESCE(TO_CHAR(O.CHARGE_SHEET_DATE, 'DD-Mon-YYYY'), '-') AS CHARGE_SHEET_DATE,
+        C.id AS cid,
+        C.INTERIM_ORDER_DATE,
+        C.FINAL_AMOUNT,
+        C.INTERIM_AMOUNT,
+        C.TYPE,
+        C.FINAL_ORDER_DATE,
+        C.JUDGEMENT,
+        CASE 
+            WHEN O.REQUEST_STATUS = 'CO' THEN 'Paid'
+            WHEN O.REQUEST_STATUS IN ('E', 'S', 'F1', 'C') THEN 'Pending'
+            ELSE NULL
+        END AS Payment_Status,
+        CURRENT_DATE - O.CHARGE_SHEET_DATE AS DURATION,
+        S.PROCEED_INTERIM,
+        S.PROCEED_FINAL,
+        S.NEW_STATUS,
+        S.INTERIM_PAYMENT_STATUS,
+        S.FINAL_PAYMENT_STATUS,
+        C.INTERIM,
+        C.FINAL,
+        S.PROCEED_INTERIM,
+        S.PROCEED_FINAL,
+        S.court_id,
+        S.id AS sid,
+        C.INTERIM_AWARDED_YES,
+        O.INTERIM_YES,
+        O.FINAL_YES,
+        C.NAME_OF_COURT,
+        CASE
+            WHEN O.WILLINGNESS_COMPENSATION = 'No' THEN 'Not awarded'
+            WHEN O.WILLINGNESS_COMPENSATION = 'Yes' AND C.INTERIM_AWARDED_YES = 'No' THEN 'Not awarded'
+            WHEN O.WILLINGNESS_COMPENSATION = 'Yes' AND C.INTERIM_AWARDED_YES = 'Yes' AND S.PROCEED_INTERIM IS NULL THEN 'Pending'
+            WHEN O.WILLINGNESS_COMPENSATION = 'Yes' AND C.INTERIM_AWARDED_YES = 'Yes' AND S.PROCEED_INTERIM IS NOT NULL THEN 'Disbursed'
+            ELSE 'Pending'
+        END AS Condition_Status,
+        CASE
+            WHEN C.FINAL IS NOT NULL THEN 'Orders passed'
+            WHEN C.FINAL IS NULL THEN 'Pending Trail'
+            ELSE 'Pending'
+        END AS Condition_Status_1,
+        CASE
+            WHEN O.WILLINGNESS_COMPENSATION = 'No' THEN 'Not awarded'
+            WHEN O.WILLINGNESS_COMPENSATION = 'Yes' AND S.PROCEED_FINAL IS NULL THEN 'Pending'
+            WHEN O.WILLINGNESS_COMPENSATION = 'Yes' AND S.PROCEED_FINAL IS NOT NULL THEN 'Disbursed'
+            ELSE 'Pending'
+        END AS Condition_Status_2,
+        CURRENT_DATE - O.DATE_OF_FIR AS Aging_of_cases,
+        O.CHARGE_SHEET_DATE - O.DATE_OF_FIR AS Aging_of_chargesheet_date,
+        O.NAME_MEDICAL_INSTITUTION,
+        O.COMPLAINT_MADE,
+        O.DATE_REQUISITION_MEDICAL_EXAMINATION,
+        O.DATE_OF_MEDICAL_EXAMINATION_VICTIM,
+        O.DATE_OF_INTERIM
+    FROM 
+        TNEGA_OVERALL_T_dup O
+    INNER JOIN TNEGA_JUDGE_LOGIN_T C ON O.ID = C.COURT_ID
+    INNER JOIN TNEA_SUPERINTENDENT_T S ON O.ID = S.COURT_ID
+    WHERE 
+        O.REQUEST_STATUS IN ('E', 'S', 'F1', 'C')
+    --    AND (O.CREATED_DATE = COALESCE(:P1_FROM_DATE1, O.CREATED_DATE))
+    ORDER BY 
+        O.UPDATED_DATE DESC
+) A
 
 -- When click on Edit it move to another form page:
 --1. Police
-select DISTRICT_NAME,
+select
+ID, DISTRICT_NAME,
        POL_STAT,
        YEAR_DAT,
        FIR_NO,
@@ -1227,7 +1319,7 @@ select ID,
        FINAL_PAYMENT_STATUS,
        INTERIM_PAYMENT_STATUS
   from TNEA_SUPERINTENDENT_T  
-  WHERE ID + :P86_ID;
+  WHERE ID  :P86_ID;
   
 
 
@@ -1607,14 +1699,7 @@ WHERE
     AND a.district_name IN ('District') 
     AND a.ID = :APP_EMPLOYEE_ID
     AND (O.COMPLAINT_NAME BETWEEN COALESCE(:P80_NEW_4, O.COMPLAINT_NAME) AND COALESCE(:P80_NEW_5, O.COMPLAINT_NAME) OR :P80_NEW_4 IS NULL OR :P80_NEW_5 IS NULL)
-    AND (O.DATE_OF_FIR BETWEEN COALESCE(:P80_NEW_2, O.DATE_OF_FIR) AND COALESCE(:P80_NEW_3, O.DATE_OF_FIR) OR :P80_NEW_2 IS NULL OR :P80_NEW_3 IS NULL)
-    AND (O.CHARGE_SHEET_DATE BETWEEN COALESCE(:P80_NEW, O.CHARGE_SHEET_DATE) AND COALESCE(:P80_NEW_1, O.CHARGE_SHEET_DATE) OR :P80_NEW IS NULL OR :P80_NEW_1 IS NULL)
-    AND (C.INTERIM_ORDER_DATE BETWEEN COALESCE(:P80_NEW_6, C.INTERIM_ORDER_DATE) AND COALESCE(:P80_NEW_7, C.INTERIM_ORDER_DATE) OR :P80_NEW_6 IS NULL OR :P80_NEW_7 IS NULL)
-    AND (C.FINAL_ORDER_DATE BETWEEN COALESCE(:P80_NEW_8, C.FINAL_ORDER_DATE) AND COALESCE(:P80_NEW_9, C.FINAL_ORDER_DATE) OR :P80_NEW_8 IS NULL OR :P80_NEW_9 IS NULL)
-    AND (C.COURT_FILE_DATE BETWEEN COALESCE(:P80_NEW_10, C.COURT_FILE_DATE) AND COALESCE(:P80_NEW_10_1, C.COURT_FILE_DATE) OR :P80_NEW_10 IS NULL OR :P80_NEW_10_1 IS NULL);
-
-
-
+ 
 
 -- #*#*#**#*#*#*#*#**#*#*#*#*#*#**#*#*#*#*#**#*# State Admin Login #*#*#**#*#*#*#*#*#*#*#**#*#*#*#*#*#*#*#*
 Tnega
@@ -1948,7 +2033,7 @@ WHERE
 ORDER BY 
     S.DISTRICT_NAME ASC;
 
-
+SELECT * FROM SIGNUP_T;
 
 
 -- Customize Report:
