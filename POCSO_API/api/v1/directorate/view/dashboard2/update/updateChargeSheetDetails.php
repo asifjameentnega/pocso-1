@@ -35,8 +35,6 @@ try {
         throw new Exception("ID is required and cannot be null.");
     }
 
-    // Begin transaction to ensure atomic updates
-    $write_db->beginTransaction();
 
     // Prepare and execute the update query
     $sql = "UPDATE TNEGA_OVERALL_T_DUP
@@ -52,9 +50,6 @@ try {
         ':DATE_OF_MEDICAL_EXAMINATION_VICTIM' => $dateOfMedicalExaminationVictim,
         ':ID' => $id
     ]);
-
-    // Commit transaction
-    $write_db->commit();
 
     // Check if the update affected rows
     if ($stmt->rowCount() > 0) {
