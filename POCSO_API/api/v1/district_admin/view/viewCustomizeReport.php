@@ -22,29 +22,16 @@ try {
     $inputData = json_decode(file_get_contents("php://input"), true);
 
     // Validate input
-    if (!isset($inputData['EMPLOYEE_ID']) || empty($inputData['EMPLOYEE_ID'])) {
-        throw new Exception("Invalid input. 'EMPLOYEE_ID' is required.");
+    if (!isset($inputData['id']) || empty($inputData['id'])) {
+        throw new Exception("Invalid input. 'id' is required.");
     }
 
     // Sanitize input
-    $employee_id = htmlspecialchars(strip_tags($inputData['EMPLOYEE_ID']));
+    $employee_id = htmlspecialchars(strip_tags($inputData['id']));
 
     // Validate the rest of the parameters if present
-    $complaint_name_from = isset($inputData['COMPLAINT_NAME_FROM']) ? $inputData['COMPLAINT_NAME_FROM'] : null;
-    $complaint_name_to = isset($inputData['COMPLAINT_NAME_TO']) ? $inputData['COMPLAINT_NAME_TO'] : null;
-    $date_of_fir_from = isset($inputData['DATE_OF_FIR_FROM']) ? $inputData['DATE_OF_FIR_FROM'] : null;
-    $date_of_fir_to = isset($inputData['DATE_OF_FIR_TO']) ? $inputData['DATE_OF_FIR_TO'] : null;
-    $charge_sheet_date_from = isset($inputData['CHARGE_SHEET_DATE_FROM']) ? $inputData['CHARGE_SHEET_DATE_FROM'] : null;
-    $charge_sheet_date_to = isset($inputData['CHARGE_SHEET_DATE_TO']) ? $inputData['CHARGE_SHEET_DATE_TO'] : null;
-    $interim_order_date_from = isset($inputData['INTERIM_ORDER_DATE_FROM']) ? $inputData['INTERIM_ORDER_DATE_FROM'] : null;
-    $interim_order_date_to = isset($inputData['INTERIM_ORDER_DATE_TO']) ? $inputData['INTERIM_ORDER_DATE_TO'] : null;
-    $final_order_date_from = isset($inputData['FINAL_ORDER_DATE_FROM']) ? $inputData['FINAL_ORDER_DATE_FROM'] : null;
-    $final_order_date_to = isset($inputData['FINAL_ORDER_DATE_TO']) ? $inputData['FINAL_ORDER_DATE_TO'] : null;
-    $court_file_date_from = isset($inputData['COURT_FILE_DATE_FROM']) ? $inputData['COURT_FILE_DATE_FROM'] : null;
-    $court_file_date_to = isset($inputData['COURT_FILE_DATE_TO']) ? $inputData['COURT_FILE_DATE_TO'] : null;
-
     // Define the full SQL query
-    $sql = "SELECT 
+    $sql = "SELECT DISTINCT
     O.ID,
     O.DISTRICT_NAME,
     O.POL_STAT,
@@ -98,7 +85,7 @@ try {
     END AS Condition_Status,
     CASE
         WHEN C.FINAL IS NOT NULL THEN 'Orders passed'
-        WHEN C.FINAL IS NULL THEN 'Pending Trial'
+        WHEN C.FINAL IS NULL THEN 'Pending Trail'
         ELSE 'Other Condition'
     END AS Condition_Status_1,
     CASE
@@ -107,8 +94,9 @@ try {
         WHEN O.WILLINGNESS_COMPENSATION = 'Yes' AND S.PROCEED_FINAL IS NOT NULL THEN 'Disbursed'
         ELSE 'Other Condition'
     END AS Condition_Status_2,
-    CURRENT_DATE - O.DATE_OF_FIR AS Aging_of_cases,
-    O.CHARGE_SHEET_DATE - O.DATE_OF_FIR AS Aging_of_chargesheet_date
+   CURRENT_DATE - O.DATE_OF_FIR AS Aging_of_cases,
+O.CHARGE_SHEET_DATE - O.DATE_OF_FIR AS Aging_of_chargesheet_date
+
 FROM 
     TNEGA_OVERALL_T_DUP O
 JOIN 
@@ -119,34 +107,9 @@ JOIN
     SIGNUP_T a ON a.mobile_number = O.district_name 
 WHERE 
     O.REQUEST_STATUS IN ('C','CO','E','S','F1') 
-    AND a.role = 'Admin' 
-    AND a.district_name = 'District' 
-    AND a.ID = :EMPLOYEE_ID
-    AND (
-        (:COMPLAINT_NAME_FROM IS NULL OR O.COMPLAINT_NAME BETWEEN COALESCE(CAST(:COMPLAINT_NAME_FROM AS date), O.COMPLAINT_NAME) AND COALESCE(CAST(:COMPLAINT_NAME_TO AS date), O.COMPLAINT_NAME))
-        OR (:COMPLAINT_NAME_TO IS NULL)
-    )
-    AND (
-        (:DATE_OF_FIR_FROM IS NULL OR O.DATE_OF_FIR BETWEEN COALESCE(CAST(:DATE_OF_FIR_FROM AS DATE), O.DATE_OF_FIR) AND COALESCE(CAST(:DATE_OF_FIR_TO AS DATE), O.DATE_OF_FIR))
-        OR (:DATE_OF_FIR_TO IS NULL)
-    )
-    AND (
-        (:CHARGE_SHEET_DATE_FROM IS NULL OR O.CHARGE_SHEET_DATE BETWEEN COALESCE(CAST(:CHARGE_SHEET_DATE_FROM AS DATE), O.CHARGE_SHEET_DATE) AND COALESCE(CAST(:CHARGE_SHEET_DATE_TO AS DATE), O.CHARGE_SHEET_DATE))
-        OR (:CHARGE_SHEET_DATE_TO IS NULL)
-    )
-    AND (
-        (:INTERIM_ORDER_DATE_FROM IS NULL OR C.INTERIM_ORDER_DATE BETWEEN COALESCE(CAST(:INTERIM_ORDER_DATE_FROM AS DATE), C.INTERIM_ORDER_DATE) AND COALESCE(CAST(:INTERIM_ORDER_DATE_TO AS DATE), C.INTERIM_ORDER_DATE))
-        OR (:INTERIM_ORDER_DATE_TO IS NULL)
-    )
-    AND (
-        (:FINAL_ORDER_DATE_FROM IS NULL OR C.FINAL_ORDER_DATE BETWEEN COALESCE(CAST(:FINAL_ORDER_DATE_FROM AS DATE), C.FINAL_ORDER_DATE) AND COALESCE(CAST(:FINAL_ORDER_DATE_TO AS DATE), C.FINAL_ORDER_DATE))
-        OR (:FINAL_ORDER_DATE_TO IS NULL)
-    )
-    AND (
-        (:COURT_FILE_DATE_FROM IS NULL OR C.COURT_FILE_DATE BETWEEN COALESCE(CAST(:COURT_FILE_DATE_FROM AS DATE), C.COURT_FILE_DATE) AND COALESCE(CAST(:COURT_FILE_DATE_TO AS DATE), C.COURT_FILE_DATE))
-        OR (:COURT_FILE_DATE_TO IS NULL)
-    );
-
+    AND a.role IN ('Admin') 
+    AND a.district_name IN ('District') 
+    AND a.ID = :APP_EMPLOYEE_ID
 
 ";
 
@@ -155,19 +118,8 @@ WHERE
     $stmt = $read_db->prepare($sql);
 
     // Bind parameters
-    $stmt->bindParam(':EMPLOYEE_ID', $employee_id);
-    $stmt->bindParam(':COMPLAINT_NAME_FROM', $complaint_name_from);
-    $stmt->bindParam(':COMPLAINT_NAME_TO', $complaint_name_to);
-    $stmt->bindParam(':DATE_OF_FIR_FROM', $date_of_fir_from);
-    $stmt->bindParam(':DATE_OF_FIR_TO', $date_of_fir_to);
-    $stmt->bindParam(':CHARGE_SHEET_DATE_FROM', $charge_sheet_date_from);
-    $stmt->bindParam(':CHARGE_SHEET_DATE_TO', $charge_sheet_date_to);
-    $stmt->bindParam(':INTERIM_ORDER_DATE_FROM', $interim_order_date_from);
-    $stmt->bindParam(':INTERIM_ORDER_DATE_TO', $interim_order_date_to);
-    $stmt->bindParam(':FINAL_ORDER_DATE_FROM', $final_order_date_from);
-    $stmt->bindParam(':FINAL_ORDER_DATE_TO', $final_order_date_to);
-    $stmt->bindParam(':COURT_FILE_DATE_FROM', $court_file_date_from);
-    $stmt->bindParam(':COURT_FILE_DATE_TO', $court_file_date_to);
+    $stmt->bindParam(':APP_EMPLOYEE_ID', $employee_id);
+   
 
     // Execute the query
     $stmt->execute();

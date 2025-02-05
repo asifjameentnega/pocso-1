@@ -84,10 +84,11 @@ try {
     $sql_stmt = $write_db->prepare($sql);
 
     // Bind parameters
-    $sql_stmt->bindParam(':P53_ID', $COURT_ID, PDO::PARAM_STR);
+
     $sql_stmt->bindParam(':P53_ORDER_NO', $ORDER_NO, PDO::PARAM_STR);
-    $sql_stmt->bindParam(':P53_COURT_FILE_DATE', $COURT_FILE_DATE, PDO::PARAM_STR);
     $sql_stmt->bindParam(':P53_NAME_OF_COURT', $NAME_OF_COURT, PDO::PARAM_STR);
+    $sql_stmt->bindParam(':P53_COURT_FILE_DATE', $COURT_FILE_DATE, PDO::PARAM_STR);
+   
     $sql_stmt->bindParam(':P53_INTERIM_ORDER_DATE', $INTERIM_ORDER_DATE, PDO::PARAM_STR);
     $sql_stmt->bindParam(':P53_INTERIM_AMOUNT', $INTERIM_AMOUNT, PDO::PARAM_STR);
     $sql_stmt->bindParam(':P53_JUDGEMENT', $JUDGEMENT, PDO::PARAM_STR);
@@ -99,7 +100,7 @@ try {
     $sql_stmt->bindParam(':P53_IFSC_CODE_1', $IFSC_CODE_1, PDO::PARAM_STR);
     $sql_stmt->bindParam(':P53_ACCOUNT_NUMBER_1', $ACCOUNT_NUMBER_1, PDO::PARAM_STR);
     $sql_stmt->bindParam(':P53_BANK_NAME_1', $BANK_NAME_1, PDO::PARAM_STR);
-
+    $sql_stmt->bindParam(':P53_ID', $COURT_ID, PDO::PARAM_STR);
     // Execute the query
     if ($sql_stmt->execute()) {
         if ($sql_stmt->rowCount() > 0) {

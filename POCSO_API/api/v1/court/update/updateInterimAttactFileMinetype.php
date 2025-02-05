@@ -29,6 +29,7 @@ try {
 
     $interimAttachFilename = $inputData['INTERIM_ATTACH_FILENAME'] ?? null;
     $interimAttachMimeType = $inputData['INTERIM_ATTACH_MIMETYPE'] ?? null;
+    $INTERIM = $inputData['INTERIM'] ?? null;
     $courtId = $inputData['COURT_ID'] ?? null;
 
     // Check if INTERIM is not null
@@ -39,14 +40,14 @@ try {
 
         // Prepare and execute the update query
         $sql = "UPDATE TNEGA_JUDGE_LOGIN_T 
-                SET INTERIM = 'INTERIM',
+                SET INTERIM = :INTERIM,
                     INTERIM_ATTACH_FILENAME = :INTERIM_ATTACH_FILENAME,
                     INTERIM_ATTACH_MIMETYPE = :INTERIM_ATTACH_MIMETYPE
                 WHERE COURT_ID = :COURT_ID";
 
         $stmt = $write_db->prepare($sql);
         $stmt->execute([
-            
+            ':INTERIM' =>$INTERIM,
             ':INTERIM_ATTACH_FILENAME' => $interimAttachFilename,
             ':INTERIM_ATTACH_MIMETYPE' => $interimAttachMimeType,
             ':COURT_ID' => $courtId

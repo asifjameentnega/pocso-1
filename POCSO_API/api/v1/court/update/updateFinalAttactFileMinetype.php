@@ -26,9 +26,8 @@ try {
     }
 
     // Extract the necessary input values
-
-    $FINALAttachFilename = $inputData['FINAL_ATTACH_FILENAME'] ?? null;
     $FINAL = $inputData['FINAL'] ?? null;
+    $FINALAttachFilename = $inputData['FINAL_ATTACH_FILENAME'] ?? null;
     $FINALAttachMimeType = $inputData['FINAL_ATTACH_MIMETYPE'] ?? null;
     $courtId = $inputData['COURT_ID'] ?? null;
 
@@ -40,14 +39,13 @@ try {
 
         // Prepare and execute the update query
         $sql = "UPDATE TNEGA_JUDGE_LOGIN_T 
-                SET FINAL = :FINAL,
+                     SET FINAL = :FINAL,
                     FINAL_ATTACH_FILENAME = :FINAL_ATTACH_FILENAME,
                     FINAL_ATTACH_MIMETYPE = :FINAL_ATTACH_MIMETYPE
                 WHERE COURT_ID = :COURT_ID";
 
         $stmt = $write_db->prepare($sql);
         $stmt->execute([
-            
             ':FINAL' => $FINAL,
             ':FINAL_ATTACH_FILENAME' => $FINALAttachFilename,
             ':FINAL_ATTACH_MIMETYPE' => $FINALAttachMimeType,

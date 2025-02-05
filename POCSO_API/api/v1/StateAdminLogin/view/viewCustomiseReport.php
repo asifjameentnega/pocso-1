@@ -23,24 +23,24 @@ try {
     }
 
     // Collect and validate input parameters
-    $params = json_decode(file_get_contents('php://input'), true);
-    $queryParams = [
-        'charge_sheet_start_date' => $params['charge_sheet_start_date'] ?? null,
-        'charge_sheet_end_date'   => $params['charge_sheet_end_date'] ?? null,
-        'fir_start_date'          => $params['fir_start_date'] ?? null,
-        'fir_end_date'            => $params['fir_end_date'] ?? null,
-        'complaint_name_start'    => $params['complaint_name_start'] ?? null,
-        'complaint_name_end'      => $params['complaint_name_end'] ?? null,
-        'interim_order_start'     => $params['interim_order_start'] ?? null,
-        'interim_order_end'       => $params['interim_order_end'] ?? null,
-        'final_order_start'       => $params['final_order_start'] ?? null,
-        'final_order_end'         => $params['final_order_end'] ?? null,
-        'court_file_start'        => $params['court_file_start'] ?? null,
-        'court_file_end'          => $params['court_file_end'] ?? null,
-    ];
+    // $params = json_decode(file_get_contents('php://input'), true);
+    // $queryParams = [
+    //     'charge_sheet_start_date' => $params['charge_sheet_start_date'] ?? null,
+    //     'charge_sheet_end_date'   => $params['charge_sheet_end_date'] ?? null,
+    //     'fir_start_date'          => $params['fir_start_date'] ?? null,
+    //     'fir_end_date'            => $params['fir_end_date'] ?? null,
+    //     'complaint_name_start'    => $params['complaint_name_start'] ?? null,
+    //     'complaint_name_end'      => $params['complaint_name_end'] ?? null,
+    //     'interim_order_start'     => $params['interim_order_start'] ?? null,
+    //     'interim_order_end'       => $params['interim_order_end'] ?? null,
+    //     'final_order_start'       => $params['final_order_start'] ?? null,
+    //     'final_order_end'         => $params['final_order_end'] ?? null,
+    //     'court_file_start'        => $params['court_file_start'] ?? null,
+    //     'court_file_end'          => $params['court_file_end'] ?? null,
+    // ];
 
     // Define the SQL query with placeholders
-    $sql = "    SELECT 
+    $sql = "SELECT 
     O.ID,
     O.DISTRICT_NAME,
     O.POL_STAT,
@@ -86,7 +86,8 @@ try {
     C.NAME_OF_COURT,
     O.INTERIM_YES,
     O.FINAL_YES,
-  
+    
+    CASE
         WHEN O.WILLINGNESS_COMPENSATION = 'No' THEN 'Not awarded'
         WHEN O.WILLINGNESS_COMPENSATION = 'Yes' AND C.INTERIM_AMOUNT IS NOT NULL AND S.PROCEED_INTERIM IS NULL THEN 'Pending'
         WHEN O.WILLINGNESS_COMPENSATION = 'Yes' AND C.INTERIM_AMOUNT IS NOT NULL AND S.PROCEED_INTERIM IS NOT NULL THEN 'Disbursed'
@@ -113,17 +114,11 @@ JOIN
     TNEA_SUPERINTENDENT_T S ON O.ID = S.COURT_ID 
 WHERE 
     O.REQUEST_STATUS IN ('C', 'CO', 'E', 'S', 'F1')
-    AND (O.COMPLAINT_NAME BETWEEN COALESCE(:complaint_name_start, O.COMPLAINT_NAME) AND COALESCE(:complaint_name_end, O.COMPLAINT_NAME) OR O.COMPLAINT_NAME IS NULL)
-    AND (O.DATE_OF_FIR BETWEEN COALESCE(:fir_start_date, O.DATE_OF_FIR) AND COALESCE(:fir_end_date, O.DATE_OF_FIR) OR O.DATE_OF_FIR IS NULL)
-    AND (O.CHARGE_SHEET_DATE BETWEEN COALESCE(:charge_sheet_start_date, O.CHARGE_SHEET_DATE) AND COALESCE(:charge_sheet_end_date, O.CHARGE_SHEET_DATE) OR O.CHARGE_SHEET_DATE IS NULL)
-    AND (C.INTERIM_ORDER_DATE BETWEEN COALESCE(:interim_order_start, C.INTERIM_ORDER_DATE) AND COALESCE(:interim_order_end, C.INTERIM_ORDER_DATE) OR C.INTERIM_ORDER_DATE IS NULL)
-    AND (C.FINAL_ORDER_DATE BETWEEN COALESCE(:final_order_start, C.FINAL_ORDER_DATE) AND COALESCE(:final_order_end, C.FINAL_ORDER_DATE) OR C.FINAL_ORDER_DATE IS NULL)
-    AND (C.COURT_FILE_DATE BETWEEN COALESCE(:court_file_start, C.COURT_FILE_DATE) AND COALESCE(:court_file_end, C.COURT_FILE_DATE) OR C.COURT_FILE_DATE IS NULL);
-";
+  ";
 
     // Prepare and execute the SQL statement
     $stmt = $read_db->prepare($sql);
-    $stmt->execute($queryParams);
+    $stmt->execute();
 
     // Check for results
     if ($stmt->rowCount() > 0) {

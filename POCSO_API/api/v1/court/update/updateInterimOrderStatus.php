@@ -41,10 +41,10 @@ try {
     $ID = $inputData['ID'];
 
     // Prepare SQL query
-    $sql = "UPDATE TNEGA_OVERALL_T_DUP O
-            SET O.request_status = 'C'
-            WHERE O.ID = :P53_COURT_ID_1
-            AND O.ID = (
+    $sql = "UPDATE TNEGA_OVERALL_T_DUP 
+            SET request_status = 'C'
+            WHERE ID = :P53_COURT_ID_1
+            AND ID = (
                 SELECT J.COURT_ID 
                 FROM TNEA_SUPERINTENDENT_T J 
                 WHERE J.COURT_ID = :P53_ID 
